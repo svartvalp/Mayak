@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.sql.Timestamp;
 import java.util.Calendar;
 
 @Entity
@@ -31,18 +32,23 @@ public class UserInfo {
     @Column(name = "phone_number")
     @JsonProperty("phone_number")
     private String phoneNumber;
+    @Column(name = "creation_timestamp")
+    @JsonProperty("creation_timestamp")
+    private Timestamp creationTimestamp;
 
     public UserInfo() {
     }
 
-    public UserInfo(int userId, String firstName, String lastName, String nickName, Calendar dateOfBirth, String phoneNumber) {
+    public UserInfo(int userId, String firstName, String lastName, String nickName, Calendar dateOfBirth, String phoneNumber, Timestamp creationTimestamp) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.nickName = nickName;
         this.dateOfBirth = dateOfBirth;
         this.phoneNumber = phoneNumber;
+        this.creationTimestamp = creationTimestamp;
     }
+
     public int getUserId() {
         return userId;
     }
@@ -88,5 +94,13 @@ public class UserInfo {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public Timestamp getCreationTimestamp() {
+        return creationTimestamp;
+    }
+
+    public void setCreationTimestamp(Timestamp creationTimestamp) {
+        this.creationTimestamp = creationTimestamp;
     }
 }

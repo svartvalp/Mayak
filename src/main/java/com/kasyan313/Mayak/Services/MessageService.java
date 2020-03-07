@@ -8,6 +8,7 @@ import com.kasyan313.Mayak.Models.Text;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.jboss.jandex.Main;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -17,9 +18,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 @Repository
 public class MessageService implements IMessageService {
@@ -28,6 +27,33 @@ public class MessageService implements IMessageService {
 
     private Session session() {
         return sessionFactoryBean.getCurrentSession();
+    }
+
+    @Override
+    public Map<Integer, Integer> getAllDialogs(int userId) {
+        Session session = session();
+        session.beginTransaction();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
+        Root<Message> root = query.from(Message.class);
+        try {
+            Predicate fromMainId = criteriaBuilder.equal(root.get("from"), userId);
+            Predicate toMainId = criteriaBuilder.equal(root.get("to"), userId);
+            Predicate lessThanOther = criteriaBuilder.lessThanOrEqualTo(root.get("from"), root.get("to"));
+            Predicate orPredicate = criteriaBuilder.or(fromMainId, toMainId);
+            Predicate fullPredicate = criteriaBuilder.and(lessThanOther, orPredicate);
+            List<Message> messages = session.createQuery(query.select(root)
+                    .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).list();
+            Map<Integer, Integer> resultMap = new LinkedHashMap<>();
+            for(Message message : messages) {
+                resultMap.put(message.getFrom(), message.getTo());
+            }
+            session.getTransaction().commit();
+            return resultMap;
+        }catch (NoResultException exc) {
+            session.getTransaction().rollback();
+            throw new ResourceNotFoundException();
+        }
     }
 
     @Override
@@ -268,6 +294,41 @@ public class MessageService implements IMessageService {
                 session.merge(message);
             }
             session.getTransaction().commit();
+        }catch (NoResultException exc) {
+            session.getTransaction().rollback();
+            throw new ResourceNotFoundException();
+        }
+    }
+
+    @Override
+    public List<MessageInstance> getMessagesBetweenTimestamp(Timestamp firstTimestamp,
+                                                             Timestamp lastTimestamp,
+                                                             int mainUserId, int anotherUserId) {
+        Session session = session();
+        session.beginTransaction();
+        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+        CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
+        Root<Message> root = query.from(Message.class);
+        try {
+            Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
+            Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
+            Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
+            Predicate fromAnotherId = criteriaBuilder.equal(root.get("from"), anotherUserId);
+            Predicate fromMainToAnother = criteriaBuilder.and(fromMainId,toAnotherId);
+            Predicate fromAnotherToMain = criteriaBuilder.and(fromAnotherId, toMainId);
+            Predicate afterTimestamp = criteriaBuilder.lessThan(root.get("timestamp"), lastTimestamp);
+            Predicate beforeTimestamp = criteriaBuilder.greaterThan(root.get("timestamp"), firstTimestamp);
+            Predicate betweenTimestamps = criteriaBuilder.and(afterTimestamp, beforeTimestamp);
+            Predicate orPredicate = criteriaBuilder.or(fromAnotherToMain, fromMainToAnother);
+            Predicate fullPredicate = criteriaBuilder.and(betweenTimestamps, orPredicate);
+            List<Message> messages = session.createQuery(query.select(root)
+                    .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).list();
+            List<MessageInstance> instances = new LinkedList<>();
+            session.getTransaction().commit();
+            for(Message message : messages) {
+                instances.add(getMessageInstanceById(message.getMessageId()));
+            }
+            return instances;
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
