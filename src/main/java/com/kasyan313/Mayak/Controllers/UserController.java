@@ -51,9 +51,9 @@ public class UserController {
         userService.updateEmail(oldEmail, newEmail);
     }
 
-    @PutMapping(value = "/user/password")
+    @PutMapping(value = "/user/email/{email}/password")
     @ResponseStatus(HttpStatus.OK)
-    public void updateUserPassword(@RequestParam("email") String email, @RequestParam("oldPassword") String oldPassword,
+    public void updateUserPassword(@PathVariable(name = "email") String email, @RequestParam("oldPassword") String oldPassword,
                                    @RequestParam("newPassword") String newPassword) {
         userService.updatePassword(email, oldPassword, newPassword);
     }
