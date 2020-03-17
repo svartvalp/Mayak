@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @Configuration
 @EnableWebMvc
 @ComponentScan(basePackages = {"com.kasyan313.Mayak"})
-@Import(HibernateConfig.class)
+@Import({HibernateConfig.class, SMTPConfig.class})
 public class AppConfig {
 
 }

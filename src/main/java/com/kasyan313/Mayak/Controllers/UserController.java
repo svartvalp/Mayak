@@ -7,6 +7,8 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -14,6 +16,8 @@ import java.util.Map;
 
 @RestController
 public class UserController {
+    @Autowired
+    JavaMailSender javaMailSender;
 
     @Autowired
     SessionFactory sessionFactoryBean;
@@ -63,5 +67,16 @@ public class UserController {
         Map<String, String> responseBody = new LinkedHashMap<>();
         responseBody.put("user_id", Integer.toString(userService.getId(email, password)));
         return responseBody;
+    }
+    @PutMapping(value = "auth/forgot")
+    public void sendUserPasswordInMail(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = userService.getPassword(email);
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setFrom("kasyan313@gmail.com");
+        mailMessage.setSubject("Your password");
+        mailMessage.setText("Yout password: " + password);
+        javaMailSender.send(mailMessage);
     }
 }
