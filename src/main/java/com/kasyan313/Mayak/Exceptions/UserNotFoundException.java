@@ -5,5 +5,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.UNAUTHORIZED)
 public class UserNotFoundException extends RuntimeException {
+    @Override
+    public String getMessage() {
+        return "user not found";
+    }
 }
 

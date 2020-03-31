@@ -5,5 +5,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.CONFLICT)
 public class UserAlreadyExistsException extends RuntimeException {
-
+    @Override
+    public String getMessage() {
+        return "user already exists";
+    }
 }
