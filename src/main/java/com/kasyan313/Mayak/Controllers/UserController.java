@@ -7,6 +7,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
@@ -76,7 +77,18 @@ public class UserController {
         mailMessage.setTo(email);
         mailMessage.setFrom("kasyan313@gmail.com");
         mailMessage.setSubject("Your password");
-        mailMessage.setText("Yout password: " + password);
+        mailMessage.setText("Your password: " + password);
         javaMailSender.send(mailMessage);
+    }
+
+    @PutMapping(value = "/user/{id}/profile/image")
+    @ResponseBody
+    public void uploadUserImage(@RequestBody byte[] source, @PathVariable("id") int id) {
+        userService.uploadProfileImage(source, id);
+    }
+
+    @GetMapping(value = "/user/{id}/profile/image", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> loadUserImage(@PathVariable("id") int id) {
+        return ResponseEntity.ok().body(userService.getProfileImage(id));
     }
 }

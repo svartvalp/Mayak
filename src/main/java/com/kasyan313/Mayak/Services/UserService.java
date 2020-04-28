@@ -1,10 +1,12 @@
 package com.kasyan313.Mayak.Services;
 
 import com.kasyan313.Mayak.Exceptions.UserAlreadyExistsException;
+import com.kasyan313.Mayak.Models.ProfileImage;
 import com.kasyan313.Mayak.Models.User;
 import com.kasyan313.Mayak.Exceptions.UserNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +15,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
+import java.util.Queue;
 
 @Repository
 public class UserService implements IUserService {
@@ -161,6 +164,34 @@ public class UserService implements IUserService {
         }catch (NoResultException exc){
             session.getTransaction().rollback();
             throw new UserNotFoundException();
+        }
+    }
+
+    @Override
+    public void uploadProfileImage(byte[] source, int userId) {
+        Session session = session();
+        session.beginTransaction();
+        ProfileImage profileImage = new ProfileImage(userId, source);
+        try {
+            session.save(profileImage);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+        }
+    }
+
+    @Override
+    public byte[] getProfileImage(int userId) {
+        Session session = session();
+        session.beginTransaction();
+        try {
+            Query<ProfileImage> query = session.createQuery("FROM ProfileImage where userId = :userId",ProfileImage.class);
+            query.setParameter("userId", userId);
+            ProfileImage image = query.getSingleResult();
+            return  image.getSource();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw  new UserNotFoundException();
         }
     }
 }

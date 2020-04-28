@@ -14,4 +14,6 @@ public interface IUserService {
     public boolean updatePassword(String email, String oldPassword, String newPassword);
     public boolean deleteUser(int id);
     public String getPassword(String email);
-}
+    public void uploadProfileImage(byte[] source, int userId);
+    public byte[] getProfileImage(int userId);
+ }
