@@ -81,7 +81,7 @@ public class UserController {
         javaMailSender.send(mailMessage);
     }
 
-    @PutMapping(value = "/user/{id}/profile/image")
+    @PostMapping(value = "/user/{id}/profile/image")
     @ResponseBody
     public void uploadUserImage(@RequestBody byte[] source, @PathVariable("id") int id) {
         userService.uploadProfileImage(source, id);
