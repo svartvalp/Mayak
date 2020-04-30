@@ -173,7 +173,7 @@ public class UserService implements IUserService {
         session.beginTransaction();
         ProfileImage profileImage = new ProfileImage(userId, source);
         try {
-            session.save(profileImage);
+            session.saveOrUpdate(profileImage);
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
