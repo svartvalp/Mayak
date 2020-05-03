@@ -1,6 +1,7 @@
 package com.kasyan313.Mayak.Services;
 
 import com.kasyan313.Mayak.Models.User;
+import com.kasyan313.Mayak.Models.UserInfo;
 
 public interface IUserService {
     //returns a userId

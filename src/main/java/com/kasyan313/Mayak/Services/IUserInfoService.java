@@ -8,4 +8,5 @@ public interface IUserInfoService {
     public void createUserInfo(UserInfo userInfo);
     public UserInfo getInfoByUserId(int userId);
     public void updateUserInfo(UserInfo userInfo);
+    public UserInfo findUserInfoByNickName(String nickname);
 }

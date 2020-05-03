@@ -23,7 +23,7 @@ public class UserInfo {
     @Column(name = "last_name")
     @JsonProperty("last_name")
     private String lastName;
-    @Column(name = "nickname")
+    @Column(name = "nickname", unique = true)
     @JsonProperty("nickname")
     private String nickName;
     @Column(name = "date_of_birth")

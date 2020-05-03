@@ -1,6 +1,7 @@
 package com.kasyan313.Mayak.Services;
 
 import com.kasyan313.Mayak.Exceptions.ResourceNotFoundException;
+import com.kasyan313.Mayak.Exceptions.UserAlreadyExistsException;
 import com.kasyan313.Mayak.Exceptions.UserNotFoundException;
 import com.kasyan313.Mayak.Models.User;
 import com.kasyan313.Mayak.Models.UserInfo;
@@ -26,8 +27,14 @@ public class UserInfoService implements IUserInfoService {
     public void createUserInfo(UserInfo userInfo) {
         Session session = session();
         session.beginTransaction();
-        session.save(userInfo);
-        session.getTransaction().commit();
+        try {
+            session.save(userInfo);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new UserAlreadyExistsException("nickname is already used");
+        }
+
     }
 
     @Override
@@ -50,8 +57,29 @@ public class UserInfoService implements IUserInfoService {
     @Override
     public void updateUserInfo(UserInfo userInfo) {
         Session session = session();
+        try {
+            session.beginTransaction();
+            session.merge(userInfo);
+            session.getTransaction().commit();
+        }catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new UserAlreadyExistsException("nickname is already used");
+        }
+    }
+
+    @Override
+    public UserInfo findUserInfoByNickName(String nickname) {
+        Session session = session();
         session.beginTransaction();
-        session.merge(userInfo);
-        session.getTransaction().commit();
+        try {
+            UserInfo userInfo = session.createQuery("from UserInfo where nickName = :nickname", UserInfo.class)
+                    .setParameter("nickname", nickname)
+                    .getSingleResult();
+            session.getTransaction().commit();
+            return userInfo;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new UserNotFoundException();
+        }
     }
 }
