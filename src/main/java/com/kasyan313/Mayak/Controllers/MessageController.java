@@ -3,6 +3,7 @@ package com.kasyan313.Mayak.Controllers;
 import com.kasyan313.Mayak.MessageInstance;
 import com.kasyan313.Mayak.Models.Image;
 import com.kasyan313.Mayak.Models.Text;
+import com.kasyan313.Mayak.Models.UserInfo;
 import com.kasyan313.Mayak.Services.IMessageService;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,7 +110,7 @@ public class MessageController {
     }
     @GetMapping(value = "/user/{userId}/dialogs")
     @ResponseStatus(HttpStatus.OK)
-    public Map<Integer, Integer> getDialogs(@PathVariable("userId") int userId) {
-        return messageService.getAllDialogs(userId);
+    public List<UserInfo> getDialogs(@PathVariable("userId") int userId) {
+        return messageService.getAllDialogUserInfos(userId);
     }
 }

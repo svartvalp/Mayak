@@ -2,12 +2,11 @@ package com.kasyan313.Mayak.Services;
 
 import com.kasyan313.Mayak.Exceptions.ResourceNotFoundException;
 import com.kasyan313.Mayak.MessageInstance;
-import com.kasyan313.Mayak.Models.Image;
-import com.kasyan313.Mayak.Models.Message;
-import com.kasyan313.Mayak.Models.Text;
+import com.kasyan313.Mayak.Models.*;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 import org.jboss.jandex.Main;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -19,6 +18,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Repository
 public class MessageService implements IMessageService {
@@ -30,26 +30,27 @@ public class MessageService implements IMessageService {
     }
 
     @Override
-    public Map<Integer, Integer> getAllDialogs(int userId) {
+    public List<UserInfo> getAllDialogUserInfos(int userId) {
         Session session = session();
         session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
         try {
-            Predicate fromMainId = criteriaBuilder.equal(root.get("from"), userId);
-            Predicate toMainId = criteriaBuilder.equal(root.get("to"), userId);
-            Predicate lessThanOther = criteriaBuilder.lessThanOrEqualTo(root.get("from"), root.get("to"));
-            Predicate orPredicate = criteriaBuilder.or(fromMainId, toMainId);
-            Predicate fullPredicate = criteriaBuilder.and(lessThanOther, orPredicate);
-            List<Message> messages = session.createQuery(query.select(root)
-                    .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).list();
-            Map<Integer, Integer> resultMap = new LinkedHashMap<>();
-            for(Message message : messages) {
-                resultMap.put(message.getFrom(), message.getTo());
-            }
+            Predicate fromUserId = criteriaBuilder.equal(root.get("from"), userId);
+            Predicate toUserId = criteriaBuilder.equal(root.get("to"), userId);
+            Object[] userIds = session.createQuery(query.select(root)
+                    .where(criteriaBuilder.or(fromUserId, toUserId))
+                    .orderBy(criteriaBuilder.desc(root.get("timestamp"))))
+                    .stream()
+                    .mapToInt(message -> {
+                        return message.getFrom() == userId ? message.getTo() : message.getFrom();
+                    }).distinct().boxed().toArray();
+            Query<UserInfo> userInfoQuery = session.createQuery("from UserInfo where userId in (:userIds)");
+            userInfoQuery.setParameterList("userIds", userIds);
+            List<UserInfo> userInfoList = userInfoQuery.getResultList();
             session.getTransaction().commit();
-            return resultMap;
+           return userInfoList;
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();

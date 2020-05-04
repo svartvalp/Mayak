@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
@@ -36,6 +37,7 @@ public class UserInfo {
     private Calendar dateOfBirth;
     @Column(name = "phone_number")
     @JsonProperty("phone_number")
+    @Size(max = 12)
     private String phoneNumber;
     @Column(name = "creation_timestamp")
     @JsonProperty("creation_timestamp")

@@ -3,13 +3,14 @@ package com.kasyan313.Mayak.Services;
 import com.kasyan313.Mayak.MessageInstance;
 import com.kasyan313.Mayak.Models.Image;
 import com.kasyan313.Mayak.Models.Text;
+import com.kasyan313.Mayak.Models.UserInfo;
 
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
 public interface IMessageService {
-    public Map<Integer, Integer> getAllDialogs(int userId);
+    public List<UserInfo> getAllDialogUserInfos(int userId);
     public MessageInstance getMessageInstanceById(int messageId);
     public Image getImageById(int imageId);
     public void deleteMessage(int messageId);
