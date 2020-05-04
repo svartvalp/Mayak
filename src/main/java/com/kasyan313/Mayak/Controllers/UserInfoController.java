@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 public class UserInfoController {
 
@@ -18,12 +20,12 @@ public class UserInfoController {
     }
 
     @PostMapping(value = "/user/info", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void createUserInfo(@RequestBody UserInfo userInfo) {
+    public void createUserInfo(@Valid @RequestBody UserInfo userInfo) {
         userInfoService.createUserInfo(userInfo);
     }
 
     @PutMapping(value = "/user/info/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void updateUserInfo(@RequestBody UserInfo userInfo, @PathVariable String id) {
+    public void updateUserInfo(@Valid @RequestBody UserInfo userInfo, @PathVariable String id) {
         userInfoService.updateUserInfo(userInfo);
     }
 

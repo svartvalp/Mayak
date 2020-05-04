@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
 @Entity
@@ -16,9 +17,11 @@ public class Message {
     private int messageId;
     @Column(name = "from_id")
     @JsonProperty("from")
+    @NotNull
     private int from;
     @Column(name = "to_id")
     @JsonProperty("to")
+    @NotNull
     private int to;
     @Column(name = "message_timestamp")
     @JsonProperty("timestamp")

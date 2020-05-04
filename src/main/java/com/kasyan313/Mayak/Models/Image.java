@@ -4,6 +4,7 @@ package com.kasyan313.Mayak.Models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "image")
@@ -14,6 +15,7 @@ public class Image {
     @JsonIgnore
     byte[] source;
     @Column(name = "message_id")
+    @NotNull
     private int messageId;
     @Id
     @Column(name = "image_id")

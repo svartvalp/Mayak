@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ public class MessageController {
 
     @PostMapping(value = "/message", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public MessageInstance createMessage(@RequestBody MessageInstance instance) {
+    public MessageInstance createMessage(@Valid @RequestBody MessageInstance instance) {
         return messageService.createMessage(instance);
     }
 

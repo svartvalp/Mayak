@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
@@ -16,15 +17,19 @@ public class UserInfo {
     @Column(name = "user_id")
     @Id
     @JsonProperty("user_id")
+    @NotNull
     private int userId;
     @Column(name = "first_name")
     @JsonProperty("first_name")
+    @NotNull
     private String firstName;
     @Column(name = "last_name")
     @JsonProperty("last_name")
+    @NotNull
     private String lastName;
     @Column(name = "nickname", unique = true)
     @JsonProperty("nickname")
+    @NotNull
     private String nickName;
     @Column(name = "date_of_birth")
     @JsonProperty("date_of_birth")
@@ -34,6 +39,7 @@ public class UserInfo {
     private String phoneNumber;
     @Column(name = "creation_timestamp")
     @JsonProperty("creation_timestamp")
+    @NotNull
     private Timestamp creationTimestamp;
 
     public UserInfo() {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @Entity
@@ -17,9 +18,11 @@ public class User implements Serializable {
     private int userId;
     @Column(name = "email")
     @JsonProperty("email")
+    @NotNull
     private String email;
     @JsonProperty("password")
     @Column(name = "password")
+    @NotNull
     private String password;
 
     public User() {

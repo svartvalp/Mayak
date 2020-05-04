@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "text")
@@ -18,6 +19,7 @@ public class Text {
     @JsonProperty("text")
     String text;
     @Column(name = "message_id")
+    @NotNull
     private int messageId;
     public Text() {
     }

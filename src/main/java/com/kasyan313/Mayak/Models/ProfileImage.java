@@ -1,12 +1,14 @@
 package com.kasyan313.Mayak.Models;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "profile_image")
 public class ProfileImage {
     @Id
     @Column(name = "user_id")
+    @NotNull
     private int userId;
     @Column(name = "source")
     private byte[] source;
