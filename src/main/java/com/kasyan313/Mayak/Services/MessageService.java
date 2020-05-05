@@ -36,7 +36,6 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
             Predicate fromUserId = criteriaBuilder.equal(root.get("from"), userId);
             Predicate toUserId = criteriaBuilder.equal(root.get("to"), userId);
             Object[] userIds = session.createQuery(query.select(root)
@@ -46,15 +45,14 @@ public class MessageService implements IMessageService {
                     .mapToInt(message -> {
                         return message.getFrom() == userId ? message.getTo() : message.getFrom();
                     }).distinct().boxed().toArray();
+            if(userIds.length == 0) {
+                return new LinkedList<>();
+            }
             Query<UserInfo> userInfoQuery = session.createQuery("from UserInfo where userId in (:userIds)");
             userInfoQuery.setParameterList("userIds", userIds);
             List<UserInfo> userInfoList = userInfoQuery.getResultList();
             session.getTransaction().commit();
            return userInfoList;
-        }catch (NoResultException exc) {
-            session.getTransaction().rollback();
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Override
@@ -125,7 +123,7 @@ public class MessageService implements IMessageService {
         Session session = session();
         session.beginTransaction();
         Message message = instance.getMessageInfo();
-        message.setTimestamp(new Timestamp(ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")).toInstant().toEpochMilli()));
+        message.setTimestamp(new Timestamp(ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("+3")).toInstant().toEpochMilli()));
         session.save(message);
         int messageId = message.getMessageId();
         Text text = instance.getText();
