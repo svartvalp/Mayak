@@ -21,7 +21,7 @@ public class UserInfoService implements IUserInfoService {
     SessionFactory sessionFactoryBean;
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        return sessionFactoryBean.openSession();
     }
     @Override
     public void createUserInfo(UserInfo userInfo) {
@@ -34,7 +34,9 @@ public class UserInfoService implements IUserInfoService {
             session.getTransaction().rollback();
             throw new UserAlreadyExistsException("nickname is already used");
         }
-
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -52,6 +54,9 @@ public class UserInfoService implements IUserInfoService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -64,6 +69,9 @@ public class UserInfoService implements IUserInfoService {
         }catch (Exception e) {
             session.getTransaction().rollback();
             throw new UserAlreadyExistsException("nickname is already used");
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -80,6 +88,9 @@ public class UserInfoService implements IUserInfoService {
         } catch (Exception e) {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 }

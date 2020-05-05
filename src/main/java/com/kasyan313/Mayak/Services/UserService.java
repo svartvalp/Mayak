@@ -15,7 +15,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
-import java.util.Queue;
 
 @Repository
 public class UserService implements IUserService {
@@ -23,7 +22,7 @@ public class UserService implements IUserService {
     SessionFactory sessionFactoryBean;
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        return sessionFactoryBean.openSession();
     }
     @Override
     public int createUser(String email, String password) {
@@ -35,6 +34,7 @@ public class UserService implements IUserService {
         User newUser = new User(email, password);
         session.save(newUser);
         session.getTransaction().commit();
+        session.close();
         return newUser.getUserId();
     }
 
@@ -52,6 +52,9 @@ public class UserService implements IUserService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -72,6 +75,9 @@ public class UserService implements IUserService {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -84,6 +90,7 @@ public class UserService implements IUserService {
         List<User> users = session.createQuery(query.select(root)
                 .where(criteriaBuilder.equal(root.get("email"), email))).list();
         session.getTransaction().commit();
+        session.close();
         if(!users.isEmpty()) {
             return true;
         }
@@ -108,6 +115,9 @@ public class UserService implements IUserService {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -128,6 +138,9 @@ public class UserService implements IUserService {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -147,6 +160,9 @@ public class UserService implements IUserService {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -165,6 +181,9 @@ public class UserService implements IUserService {
             session.getTransaction().rollback();
             throw new UserNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -177,6 +196,9 @@ public class UserService implements IUserService {
             session.getTransaction().commit();
         } catch (Exception e) {
             session.getTransaction().rollback();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -192,6 +214,9 @@ public class UserService implements IUserService {
         } catch (Exception e) {
             session.getTransaction().rollback();
             throw  new UserNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 }

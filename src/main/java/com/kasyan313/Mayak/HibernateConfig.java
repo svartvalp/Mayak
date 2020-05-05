@@ -44,7 +44,6 @@ public class HibernateConfig {
     private final Properties hibernateProperties() {
         Properties hibernateProperties = new Properties();
         hibernateProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-        hibernateProperties.setProperty("hibernate.current_session_context_class", "thread");
         hibernateProperties.setProperty("show_sql", "true");
         return hibernateProperties;
     }

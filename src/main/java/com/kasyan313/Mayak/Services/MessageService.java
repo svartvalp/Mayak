@@ -26,7 +26,7 @@ public class MessageService implements IMessageService {
     SessionFactory sessionFactoryBean;
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        return sessionFactoryBean.openSession();
     }
 
     @Override
@@ -52,6 +52,7 @@ public class MessageService implements IMessageService {
             userInfoQuery.setParameterList("userIds", userIds);
             List<UserInfo> userInfoList = userInfoQuery.getResultList();
             session.getTransaction().commit();
+            session.close();
            return userInfoList;
     }
 
@@ -73,6 +74,9 @@ public class MessageService implements IMessageService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -90,6 +94,9 @@ public class MessageService implements IMessageService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -116,6 +123,9 @@ public class MessageService implements IMessageService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -140,6 +150,7 @@ public class MessageService implements IMessageService {
             }
         }
         session.getTransaction().commit();
+        session.close();
         return instance;
     }
 
@@ -161,6 +172,9 @@ public class MessageService implements IMessageService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -173,6 +187,7 @@ public class MessageService implements IMessageService {
         List<Image> images = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
                 .getResultList();
         session.getTransaction().commit();
+        session.close();
         return images;
     }
 
@@ -192,6 +207,9 @@ public class MessageService implements IMessageService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
     @Override
@@ -209,6 +227,9 @@ public class MessageService implements IMessageService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -240,6 +261,9 @@ public class MessageService implements IMessageService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -273,6 +297,9 @@ public class MessageService implements IMessageService {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
         }
+        finally {
+            session.close();
+        }
     }
 
 
@@ -296,6 +323,9 @@ public class MessageService implements IMessageService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 
@@ -331,6 +361,9 @@ public class MessageService implements IMessageService {
         }catch (NoResultException exc) {
             session.getTransaction().rollback();
             throw new ResourceNotFoundException();
+        }
+        finally {
+            session.close();
         }
     }
 }
