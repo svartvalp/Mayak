@@ -16,6 +16,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AppConfig implements WebMvcConfigurer {
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer.defaultContentType(MediaType.APPLICATION_JSON);
+        configurer.defaultContentType(MediaType.APPLICATION_JSON, MediaType.ALL);
     }
 }
