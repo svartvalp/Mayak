@@ -45,6 +45,7 @@ public class HibernateConfig {
         Properties hibernateProperties = new Properties();
         hibernateProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         hibernateProperties.setProperty("show_sql", "true");
+        hibernateProperties.setProperty("hibernate.globally_quoted_identifiers", "true");
         return hibernateProperties;
     }
 

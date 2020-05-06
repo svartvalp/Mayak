@@ -9,7 +9,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -18,50 +19,51 @@ import java.util.List;
 
 @Repository
 public class UserService implements IUserService {
-    @Autowired
+
     SessionFactory sessionFactoryBean;
 
-    private Session session() {
-        return sessionFactoryBean.openSession();
+    @Autowired
+    public UserService(SessionFactory sessionFactoryBean) {
+        this.sessionFactoryBean = sessionFactoryBean;
     }
+
+    private Session session() {
+        return sessionFactoryBean.getCurrentSession();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public int createUser(String email, String password) {
         if(checkIfExists(email)) {
             throw new UserAlreadyExistsException();
         }
         Session session = session();
-        session.beginTransaction();
         User newUser = new User(email, password);
         session.save(newUser);
-        session.getTransaction().commit();
-        session.close();
+        session.flush();
         return newUser.getUserId();
     }
 
+    @Transactional
     @Override
     public User findUserById(int id) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
         try {
             User user =  session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("userId"), id))).getSingleResult();
-            session.getTransaction().commit();
+            session.flush();
             return user;
         }catch (NoResultException exc) {
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional
     @Override
     public int getId(String email, String password) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
@@ -69,38 +71,32 @@ public class UserService implements IUserService {
             User user =  session.createQuery(query.select(root)
                     .where(criteriaBuilder.equal(root.get("email"), email), criteriaBuilder.equal(root.get("password"), password)))
                     .getSingleResult();
-            session.getTransaction().commit();
+            session.flush();
             return user.getUserId();
         }catch (NoResultException ex) {
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional
     @Override
     public boolean checkIfExists(String email) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
         List<User> users = session.createQuery(query.select(root)
                 .where(criteriaBuilder.equal(root.get("email"), email))).list();
-        session.getTransaction().commit();
-        session.close();
         if(!users.isEmpty()) {
             return true;
         }
         return false;
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public boolean updateEmail(String oldEmail, String newEmail) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
@@ -109,21 +105,17 @@ public class UserService implements IUserService {
                     .where(criteriaBuilder.equal(root.get("email"), oldEmail))).getSingleResult();
             user.setEmail(newEmail);
             session.merge(user);
-            session.getTransaction().commit();
+            session.flush();
             return true;
         }catch (NoResultException exc) {
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public boolean updatePassword(String email, String oldPassword, String newPassword) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
@@ -132,21 +124,17 @@ public class UserService implements IUserService {
                     .where(criteriaBuilder.equal(root.get("email"), email), criteriaBuilder.equal(root.get("password"), oldPassword))).getSingleResult();
             user.setPassword(newPassword);
             session.merge(user);
-            session.getTransaction().commit();
+            session.flush();
             return true;
         }catch (NoResultException exc) {
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional
     @Override
     public boolean deleteUser(int id) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
         Root<User> root = query.from(User.class);
@@ -154,69 +142,50 @@ public class UserService implements IUserService {
             User user = session.createQuery(query.select(root)
                     .where(criteriaBuilder.equal(root.get("userId"), id))).getSingleResult();
             session.remove(user);
-            session.getTransaction().commit();
+            session.flush();
             return true;
         }catch (NoResultException exc) {
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional
     @Override
     public String getPassword(String email) {
         Session session = session();
-        session.beginTransaction();
         CriteriaBuilder builder = session.getCriteriaBuilder();
         CriteriaQuery<User> query = builder.createQuery(User.class);
         Root<User> root = query.from(User.class);
         try {
             User user = session.createQuery(query.select(root)
                     .where(builder.equal(root.get("email"), email))).getSingleResult();
-            session.getTransaction().commit();
+            session.flush();
             return user.getPassword();
         }catch (NoResultException exc){
-            session.getTransaction().rollback();
             throw new UserNotFoundException();
-        }
-        finally {
-            session.close();
         }
     }
 
+    @Transactional
     @Override
     public void uploadProfileImage(byte[] source, int userId) {
         Session session = session();
-        session.beginTransaction();
         ProfileImage profileImage = new ProfileImage(userId, source);
-        try {
-            session.saveOrUpdate(profileImage);
-            session.getTransaction().commit();
-        } catch (Exception e) {
-            session.getTransaction().rollback();
-        }
-        finally {
-            session.close();
-        }
+        session.saveOrUpdate(profileImage);
     }
 
+    @Transactional
     @Override
     public byte[] getProfileImage(int userId) {
         Session session = session();
-        session.beginTransaction();
         try {
             Query<ProfileImage> query = session.createQuery("FROM ProfileImage where userId = :userId",ProfileImage.class);
             query.setParameter("userId", userId);
             ProfileImage image = query.getSingleResult();
+            session.flush();
             return  image.getSource();
         } catch (Exception e) {
-            session.getTransaction().rollback();
-            throw  new UserNotFoundException();
-        }
-        finally {
-            session.close();
+            throw new UserNotFoundException();
         }
     }
 }
