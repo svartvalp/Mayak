@@ -4,16 +4,15 @@ import com.kasyan313.Mayak.Exceptions.ResourceNotFoundException;
 import com.kasyan313.Mayak.Exceptions.UserAlreadyExistsException;
 import com.kasyan313.Mayak.Exceptions.UserNotFoundException;
 import com.kasyan313.Mayak.Models.UserInfo;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.NoResultException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 
 @Repository
 public class UserInfoService implements IUserInfoService {
@@ -26,7 +25,9 @@ public class UserInfoService implements IUserInfoService {
     }
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        Session session = sessionFactoryBean.getCurrentSession();
+        session.setHibernateFlushMode(FlushMode.MANUAL);
+        return session;
     }
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
@@ -44,11 +45,10 @@ public class UserInfoService implements IUserInfoService {
     @Override
     public UserInfo getInfoByUserId(int userId) {
         Session session = session();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<UserInfo> query =criteriaBuilder.createQuery(UserInfo.class);
-        Root<UserInfo> root = query.from(UserInfo.class);
+        Query<UserInfo> query = session.createQuery("from UserInfo  where userId = :userId", UserInfo.class);
+        query.setParameter("userId", userId);
         try {
-            UserInfo userInfo =  session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("userId"), userId))).getSingleResult();
+            UserInfo userInfo =  query.getSingleResult();
             session.flush();
             return userInfo;
         }catch (NoResultException exc) {

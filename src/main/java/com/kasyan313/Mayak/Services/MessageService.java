@@ -6,6 +6,7 @@ import com.kasyan313.Mayak.Models.Image;
 import com.kasyan313.Mayak.Models.Message;
 import com.kasyan313.Mayak.Models.Text;
 import com.kasyan313.Mayak.Models.UserInfo;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -36,7 +37,9 @@ public class MessageService implements IMessageService {
     }
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        Session session = sessionFactoryBean.getCurrentSession();
+        session.setHibernateFlushMode(FlushMode.MANUAL);
+        return session;
     }
 
     @Transactional
@@ -142,6 +145,7 @@ public class MessageService implements IMessageService {
                 session.save(image);
             }
         }
+        session.flush();
         return instance;
     }
 

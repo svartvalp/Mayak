@@ -4,6 +4,7 @@ import com.kasyan313.Mayak.Exceptions.UserAlreadyExistsException;
 import com.kasyan313.Mayak.Models.ProfileImage;
 import com.kasyan313.Mayak.Models.User;
 import com.kasyan313.Mayak.Exceptions.UserNotFoundException;
+import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -28,7 +29,9 @@ public class UserService implements IUserService {
     }
 
     private Session session() {
-        return sessionFactoryBean.getCurrentSession();
+        Session session = sessionFactoryBean.getCurrentSession();
+        session.setHibernateFlushMode(FlushMode.MANUAL);
+        return session;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -48,11 +51,10 @@ public class UserService implements IUserService {
     @Override
     public User findUserById(int id) {
         Session session = session();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
-        Root<User> root = query.from(User.class);
+        Query<User> query = session.createQuery("from User where userId = :userId", User.class);
+        query.setParameter("userId", id);
         try {
-            User user =  session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("userId"), id))).getSingleResult();
+            User user =  query.getSingleResult();
             session.flush();
             return user;
         }catch (NoResultException exc) {
@@ -64,13 +66,12 @@ public class UserService implements IUserService {
     @Override
     public int getId(String email, String password) {
         Session session = session();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
-        Root<User> root = query.from(User.class);
+        Query<User> query = session.createQuery("from User where email = :email and " +
+                "password = :password", User.class);
+        query.setParameter("email", email);
+        query.setParameter("password", password);
         try {
-            User user =  session.createQuery(query.select(root)
-                    .where(criteriaBuilder.equal(root.get("email"), email), criteriaBuilder.equal(root.get("password"), password)))
-                    .getSingleResult();
+            User user =  query.getSingleResult();
             session.flush();
             return user.getUserId();
         }catch (NoResultException ex) {
@@ -82,11 +83,9 @@ public class UserService implements IUserService {
     @Override
     public boolean checkIfExists(String email) {
         Session session = session();
-        CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<User> query =criteriaBuilder.createQuery(User.class);
-        Root<User> root = query.from(User.class);
-        List<User> users = session.createQuery(query.select(root)
-                .where(criteriaBuilder.equal(root.get("email"), email))).list();
+        Query<User> query = session.createQuery("from User where email = :email", User.class);
+        query.setParameter("email", email);
+        List<User> users = query.list();
         if(!users.isEmpty()) {
             return true;
         }
