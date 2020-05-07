@@ -26,19 +26,14 @@ public class UserInfoService implements IUserInfoService {
 
     private Session session() {
         Session session = sessionFactoryBean.getCurrentSession();
-        session.setHibernateFlushMode(FlushMode.MANUAL);
         return session;
     }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
     public void createUserInfo(UserInfo userInfo) {
         Session session = session();
-        try {
             session.save(userInfo);
-            session.flush();
-        } catch (Exception e) {
-            throw new UserAlreadyExistsException("nickname is already used");
-        }
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -47,38 +42,24 @@ public class UserInfoService implements IUserInfoService {
         Session session = session();
         Query<UserInfo> query = session.createQuery("from UserInfo  where userId = :userId", UserInfo.class);
         query.setParameter("userId", userId);
-        try {
             UserInfo userInfo =  query.getSingleResult();
-            session.flush();
             return userInfo;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public void updateUserInfo(UserInfo userInfo) {
         Session session = session();
-        try {
             session.merge(userInfo);
-            session.flush();
-        }catch (Exception e) {
-            throw new UserAlreadyExistsException("nickname is already used");
-        }
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public UserInfo findUserInfoByNickName(String nickname) {
         Session session = session();
-        try {
             UserInfo userInfo = session.createQuery("from UserInfo where nickName = :nickname", UserInfo.class)
                     .setParameter("nickname", nickname)
                     .getSingleResult();
             return userInfo;
-        } catch (Exception e) {
-            throw new UserNotFoundException();
-        }
     }
 }

@@ -1,12 +1,9 @@
 package com.kasyan313.Mayak.Services;
-
-import com.kasyan313.Mayak.Exceptions.ResourceNotFoundException;
 import com.kasyan313.Mayak.MessageInstance;
 import com.kasyan313.Mayak.Models.Image;
 import com.kasyan313.Mayak.Models.Message;
 import com.kasyan313.Mayak.Models.Text;
 import com.kasyan313.Mayak.Models.UserInfo;
-import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -14,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -29,7 +25,7 @@ import java.util.List;
 @Repository
 public class MessageService implements IMessageService {
 
-    SessionFactory sessionFactoryBean;
+    private SessionFactory sessionFactoryBean;
 
     @Autowired
     public MessageService(SessionFactory sessionFactoryBean) {
@@ -37,9 +33,7 @@ public class MessageService implements IMessageService {
     }
 
     private Session session() {
-        Session session = sessionFactoryBean.getCurrentSession();
-        session.setHibernateFlushMode(FlushMode.MANUAL);
-        return session;
+        return sessionFactoryBean.getCurrentSession();
     }
 
     @Transactional
@@ -59,10 +53,9 @@ public class MessageService implements IMessageService {
             if(userIds.length == 0) {
                 return new LinkedList<>();
             }
-            Query<UserInfo> userInfoQuery = session.createQuery("from UserInfo where userId in (:userIds)");
+            Query<UserInfo> userInfoQuery = session.createQuery("from UserInfo where userId in (:userIds)", UserInfo.class);
             userInfoQuery.setParameterList("userIds", userIds);
-            List<UserInfo> userInfoList = userInfoQuery.getResultList();
-           return userInfoList;
+        return userInfoQuery.getResultList();
     }
 
     @Transactional
@@ -72,16 +65,11 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Message> query = criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
             Message message = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
                     .getSingleResult();
             List<Image> images = getImagesByMessageId(messageId);
             Text text = getTextByMessageId(messageId);
-            session.flush();
             return new MessageInstance(message, text, images);
-        } catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Transactional
@@ -91,14 +79,8 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Image> query =criteriaBuilder.createQuery(Image.class);
         Root<Image> root = query.from(Image.class);
-        try {
-            Image image = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("imageId"), imageId)))
-                    .getSingleResult();
-            session.flush();
-            return image;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
+        return session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("imageId"), imageId)))
+                .getSingleResult();
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -108,7 +90,6 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
             Message message = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
                     .getSingleResult();
             List<Image> images = getImagesByMessageId(messageId);
@@ -118,10 +99,6 @@ public class MessageService implements IMessageService {
             for(Image image : images) {
                 session.delete(image);
             }
-            session.flush();
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -145,7 +122,6 @@ public class MessageService implements IMessageService {
                 session.save(image);
             }
         }
-        session.flush();
         return instance;
     }
 
@@ -156,16 +132,11 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Image> query =criteriaBuilder.createQuery(Image.class);
         Root<Image> root = query.from(Image.class);
-        try {
             Image image = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("imageId"), imageId)))
                     .getSingleResult();
             image.setSource(source);
             session.merge(image);
-            session.flush();
             return image.getImageId();
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Transactional
@@ -175,9 +146,8 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Image> query =criteriaBuilder.createQuery(Image.class);
         Root<Image> root = query.from(Image.class);
-        List<Image> images = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
+        return session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
                 .getResultList();
-        return images;
     }
 
     @Transactional
@@ -187,14 +157,8 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Text> query =criteriaBuilder.createQuery(Text.class);
         Root<Text> root = query.from(Text.class);
-        try {
-            Text text = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
-                    .getSingleResult();
-            session.flush();
-            return text;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
+        return session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("messageId"), messageId)))
+                .getSingleResult();
     }
 
     @Transactional
@@ -204,15 +168,10 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Text> query =criteriaBuilder.createQuery(Text.class);
         Root<Text> root = query.from(Text.class);
-        try {
-            Text text = session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("textId"), textId)))
-                    .getSingleResult();
-            session.flush();
-            return text;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
+        return session.createQuery(query.select(root).where(criteriaBuilder.equal(root.get("textId"), textId)))
+                .getSingleResult();
     }
+
     @Transactional
     @Override
     public List<MessageInstance> getMessagesAfterTimestamp(Timestamp timestamp, int mainUserId, int anotherUserId) {
@@ -220,7 +179,6 @@ public class MessageService implements IMessageService {
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
         CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
             Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
             Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
             Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
@@ -236,11 +194,7 @@ public class MessageService implements IMessageService {
             for(Message message : messages) {
                 instances.add(getMessageInstanceById(message.getMessageId()));
             }
-            session.flush();
             return instances;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
-        }
     }
 
     @Transactional
@@ -249,29 +203,24 @@ public class MessageService implements IMessageService {
                                                                    int anotherUserId, int limit, int offset) {
         Session session = session();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
+        CriteriaQuery<Message> query = criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
-            Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
-            Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
-            Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
-            Predicate fromAnotherId = criteriaBuilder.equal(root.get("from"), anotherUserId);
-            Predicate fromMainToAnother = criteriaBuilder.and(fromMainId,toAnotherId);
-            Predicate fromAnotherToMain = criteriaBuilder.and(fromAnotherId, toMainId);
-            Predicate afterTimestamp = criteriaBuilder.lessThan(root.get("timestamp"), timestamp);
-            Predicate orPredicate = criteriaBuilder.or(fromAnotherToMain, fromMainToAnother);
-            Predicate fullPredicate = criteriaBuilder.and(afterTimestamp, orPredicate);
-            List<Message> messages = session.createQuery(query.select(root)
-                    .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).setMaxResults(limit).setFirstResult(offset).list();
-            List<MessageInstance> instances = new LinkedList<>();
-            for(Message message : messages) {
-                instances.add(getMessageInstanceById(message.getMessageId()));
-            }
-            session.flush();
-            return instances;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
+        Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
+        Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
+        Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
+        Predicate fromAnotherId = criteriaBuilder.equal(root.get("from"), anotherUserId);
+        Predicate fromMainToAnother = criteriaBuilder.and(fromMainId, toAnotherId);
+        Predicate fromAnotherToMain = criteriaBuilder.and(fromAnotherId, toMainId);
+        Predicate afterTimestamp = criteriaBuilder.lessThan(root.get("timestamp"), timestamp);
+        Predicate orPredicate = criteriaBuilder.or(fromAnotherToMain, fromMainToAnother);
+        Predicate fullPredicate = criteriaBuilder.and(afterTimestamp, orPredicate);
+        List<Message> messages = session.createQuery(query.select(root)
+                .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).setMaxResults(limit).setFirstResult(offset).list();
+        List<MessageInstance> instances = new LinkedList<>();
+        for (Message message : messages) {
+            instances.add(getMessageInstanceById(message.getMessageId()));
         }
+        return instances;
     }
 
 
@@ -280,20 +229,15 @@ public class MessageService implements IMessageService {
     public void setChecked(int fromUserId, int toUserId) {
         Session session = session();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
+        CriteriaQuery<Message> query = criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
-            List<Message> messages = session.createQuery(query.select(root)
-                    .where(criteriaBuilder.equal(root.get("from"), fromUserId),
-                            criteriaBuilder.equal(root.get("to"), toUserId)))
-                    .list();
-            for(Message message : messages) {
-                message.setChecked(true);
-                session.merge(message);
-            }
-            session.flush();
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
+        List<Message> messages = session.createQuery(query.select(root)
+                .where(criteriaBuilder.equal(root.get("from"), fromUserId),
+                        criteriaBuilder.equal(root.get("to"), toUserId)))
+                .list();
+        for (Message message : messages) {
+            message.setChecked(true);
+            session.merge(message);
         }
     }
 
@@ -304,30 +248,25 @@ public class MessageService implements IMessageService {
                                                              int mainUserId, int anotherUserId) {
         Session session = session();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-        CriteriaQuery<Message> query =criteriaBuilder.createQuery(Message.class);
+        CriteriaQuery<Message> query = criteriaBuilder.createQuery(Message.class);
         Root<Message> root = query.from(Message.class);
-        try {
-            Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
-            Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
-            Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
-            Predicate fromAnotherId = criteriaBuilder.equal(root.get("from"), anotherUserId);
-            Predicate fromMainToAnother = criteriaBuilder.and(fromMainId,toAnotherId);
-            Predicate fromAnotherToMain = criteriaBuilder.and(fromAnotherId, toMainId);
-            Predicate afterTimestamp = criteriaBuilder.lessThan(root.get("timestamp"), lastTimestamp);
-            Predicate beforeTimestamp = criteriaBuilder.greaterThan(root.get("timestamp"), firstTimestamp);
-            Predicate betweenTimestamps = criteriaBuilder.and(afterTimestamp, beforeTimestamp);
-            Predicate orPredicate = criteriaBuilder.or(fromAnotherToMain, fromMainToAnother);
-            Predicate fullPredicate = criteriaBuilder.and(betweenTimestamps, orPredicate);
-            List<Message> messages = session.createQuery(query.select(root)
-                    .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).list();
-            List<MessageInstance> instances = new LinkedList<>();
-            for(Message message : messages) {
-                instances.add(getMessageInstanceById(message.getMessageId()));
-            }
-            session.flush();
-            return instances;
-        }catch (NoResultException exc) {
-            throw new ResourceNotFoundException();
+        Predicate fromMainId = criteriaBuilder.equal(root.get("from"), mainUserId);
+        Predicate toAnotherId = criteriaBuilder.equal(root.get("to"), anotherUserId);
+        Predicate toMainId = criteriaBuilder.equal(root.get("to"), mainUserId);
+        Predicate fromAnotherId = criteriaBuilder.equal(root.get("from"), anotherUserId);
+        Predicate fromMainToAnother = criteriaBuilder.and(fromMainId, toAnotherId);
+        Predicate fromAnotherToMain = criteriaBuilder.and(fromAnotherId, toMainId);
+        Predicate afterTimestamp = criteriaBuilder.lessThan(root.get("timestamp"), lastTimestamp);
+        Predicate beforeTimestamp = criteriaBuilder.greaterThan(root.get("timestamp"), firstTimestamp);
+        Predicate betweenTimestamps = criteriaBuilder.and(afterTimestamp, beforeTimestamp);
+        Predicate orPredicate = criteriaBuilder.or(fromAnotherToMain, fromMainToAnother);
+        Predicate fullPredicate = criteriaBuilder.and(betweenTimestamps, orPredicate);
+        List<Message> messages = session.createQuery(query.select(root)
+                .where(fullPredicate).orderBy(criteriaBuilder.desc(root.get("timestamp")))).list();
+        List<MessageInstance> instances = new LinkedList<>();
+        for (Message message : messages) {
+            instances.add(getMessageInstanceById(message.getMessageId()));
         }
+        return instances;
     }
 }
