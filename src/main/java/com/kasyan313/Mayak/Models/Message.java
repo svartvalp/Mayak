@@ -1,7 +1,6 @@
 package com.kasyan313.Mayak.Models;
 
 import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -18,21 +17,21 @@ public class Message {
     @Column(name = "from_id")
     @JsonProperty("from")
     @NotNull
-    private int from;
+    private int fromId;
     @Column(name = "to_id")
     @JsonProperty("to")
     @NotNull
-    private int to;
+    private int toId;
     @Column(name = "message_timestamp")
     @JsonProperty("timestamp")
-    private Timestamp timestamp;
+    private Timestamp messageTimestamp;
     @Column(name = "checked")
     private boolean checked;
 
-    public Message(int from, int to, Timestamp timestamp) {
-        this.from = from;
-        this.to = to;
-        this.timestamp = timestamp;
+    public Message(int fromId, int toId, Timestamp messageTimestamp) {
+        this.fromId = fromId;
+        this.toId = toId;
+        this.messageTimestamp = messageTimestamp;
     }
 
     public boolean isChecked() {
@@ -53,28 +52,28 @@ public class Message {
         this.messageId = messageId;
     }
 
-    public int getFrom() {
-        return from;
+    public int getFromId() {
+        return fromId;
     }
 
-    public void setFrom(int from) {
-        this.from = from;
+    public void setFromId(int from) {
+        this.fromId = from;
     }
 
-    public int getTo() {
-        return to;
+    public int getToId() {
+        return toId;
     }
 
-    public void setTo(int to) {
-        this.to = to;
+    public void setToId(int to) {
+        this.toId = to;
     }
 
-    public Timestamp getTimestamp() {
-        return timestamp;
+    public Timestamp getMessageTimestamp() {
+        return messageTimestamp;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
+    public void setMessageTimestamp(Timestamp timestamp) {
+        this.messageTimestamp = timestamp;
     }
 
     public Message() {
